@@ -1,0 +1,10 @@
+shift_dict:
+  MD 1: 7AM-MD1
+  MD 2: 7AM-MD2
+  MD 3: 3PM-MD3
+  MD 4: 3PM-MD4
+  MD 5: 11PM-MD5
+  MD 6: 11PM-MD6
+  MD 7: 11AM-MD7
+  MD 8: 3PM-MD8
+  BH M: 9AM-BH M

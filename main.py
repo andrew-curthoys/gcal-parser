@@ -1,5 +1,6 @@
 import datetime
 import os.path
+import yaml
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -8,7 +9,12 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
+SCOPES = ["https://www.googleapis.com/auth/calendar.events"]
+
+with open('config.yaml', 'r') as f:
+  CONFIG = yaml.safe_load(f)
+
+SHIFT_DICT = CONFIG['shift_dict']
 
 
 def main():
@@ -39,13 +45,13 @@ def main():
 
     # Call the Calendar API
     now = datetime.datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
-    print("Getting the upcoming 10 events")
+    print("Getting all upcoming events")
     events_result = (
         service.events()
         .list(
             calendarId="primary",
             timeMin=now,
-            maxResults=10,
+            maxResults=2500,
             singleEvents=True,
             orderBy="startTime",
         )
@@ -59,8 +65,22 @@ def main():
 
     # Prints the start and name of the next 10 events
     for event in events:
-      start = event["start"].get("dateTime", event["start"].get("date"))
-      print(start, event["summary"])
+      try:
+        original_shift_name = event['summary']
+        shift_name_with_time = SHIFT_DICT[original_shift_name]
+        event['summary'] = shift_name_with_time
+        updated_event = (
+            service.events()
+            .update(
+                calendarId='primary',
+                eventId=event['id'],
+                body=event
+            )
+            .execute()
+        )
+        print(f"Updated event {updated_event['summary']}")
+      except KeyError:
+        print(f"No shift map for shift title '{original_shift_name}'")
 
   except HttpError as error:
     print(f"An error occurred: {error}")
