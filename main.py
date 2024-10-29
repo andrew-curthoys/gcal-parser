@@ -1,5 +1,7 @@
 import datetime
+from dateutil import parser
 import os.path
+import traceback
 import yaml
 
 from google.auth.transport.requests import Request
@@ -66,9 +68,16 @@ def main():
     # Prints the start and name of the next 10 events
     for event in events:
       try:
+        if 'QGenda' not in event['description']:
+          continue
+      except KeyError:
+        continue
+      try:
         original_shift_name = event['summary']
-        shift_name_with_time = SHIFT_DICT[original_shift_name]
-        event['summary'] = shift_name_with_time
+        shift_datetime = parser.parse(event['start']['dateTime'])
+        shift_time = shift_datetime.strftime('%-I%p')
+        new_shift_name = f"{shift_time} {original_shift_name}"
+        event['summary'] = new_shift_name
         updated_event = (
             service.events()
             .update(
@@ -79,8 +88,9 @@ def main():
             .execute()
         )
         print(f"Updated event {updated_event['summary']}")
-      except KeyError:
-        print(f"No shift map for shift title '{original_shift_name}'")
+      except:
+        print(f"Error updating shift on {shift_datetime.strftime{'%Y-%m-%d %H'}}")
+        print(f"Error details: {traceback.format_exc}")
 
   except HttpError as error:
     print(f"An error occurred: {error}")
