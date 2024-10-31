@@ -89,7 +89,7 @@ def main():
         )
         print(f"Updated event {updated_event['summary']}")
       except:
-        print(f"Error updating shift on {shift_datetime.strftime{'%Y-%m-%d %H'}}")
+        print(f"Error updating shift on {shift_datetime.strftime('%Y-%m-%d %H')}")
         print(f"Error details: {traceback.format_exc}")
 
   except HttpError as error:
