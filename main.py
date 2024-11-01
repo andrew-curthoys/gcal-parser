@@ -73,10 +73,11 @@ def main():
       except KeyError:
         continue
       try:
-        original_shift_name = event['summary']
+        shift_name = event["summary"]
+        original_shift_name = shift_name.split(':')[-1]
         shift_datetime = parser.parse(event['start']['dateTime'])
         shift_time = shift_datetime.strftime('%-I%p')
-        new_shift_name = f"{shift_time} {original_shift_name}"
+        new_shift_name = f"{shift_time}:{original_shift_name}"
         event['summary'] = new_shift_name
         updated_event = (
             service.events()
