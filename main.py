@@ -1,9 +1,11 @@
 import datetime
 from dateutil import parser
+import logging
 import os.path
 import traceback
 import yaml
 
+import google.cloud.logging
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -13,11 +15,13 @@ from googleapiclient.errors import HttpError
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/calendar.events"]
 
+# Load config file
 with open('config.yaml', 'r') as f:
   CONFIG = yaml.safe_load(f)
 
-SHIFT_DICT = CONFIG['shift_dict']
-
+# Instantiates gcloud logging
+client = google.cloud.logging.Client()
+client.setup_logging()
 
 def main():
   """Shows basic usage of the Google Calendar API.
@@ -47,7 +51,7 @@ def main():
 
     # Call the Calendar API
     now = datetime.datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
-    print("Getting all upcoming events")
+    logging.info("Getting all upcoming events")
     events_result = (
         service.events()
         .list(
@@ -62,7 +66,7 @@ def main():
     events = events_result.get("items", [])
 
     if not events:
-      print("No upcoming events found.")
+      logging.info("No upcoming events found.")
       return
 
     # Prints the start and name of the next 10 events
@@ -88,13 +92,13 @@ def main():
             )
             .execute()
         )
-        print(f"Updated event {updated_event['summary']}")
+        logging.info(f"Updated event {updated_event['summary']}")
       except:
-        print(f"Error updating shift on {shift_datetime.strftime('%Y-%m-%d %H')}")
-        print(f"Error details: {traceback.format_exc}")
+        logging.error(f"Error updating shift on {shift_datetime.strftime('%Y-%m-%d %H')}")
+        logging.error(f"Error details: {traceback.format_exc}")
 
   except HttpError as error:
-    print(f"An error occurred: {error}")
+    logging.error(f"An error occurred: {error}")
 
 
 if __name__ == "__main__":
